@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+        // Function to add a product to the cart
+        function addToCart(userId, productId, quantity) {
+            axios.post('/cart/add', null, {
+                params: {
+                    userId: userId,
+                    productId: productId,
+                    quantity: quantity
+                }
+            }).then(response => {
+                alert(response.data);
+                viewCart(userId);  // Refresh the cart view
+            }).catch(error => {
+                alert("Error adding to cart: " + error);
+            });
+        }
+
+        // Function to view the cart
+        function viewCart(userId) {
+            axios.get(`/cart/view`, {
+                params: { userId: userId }
+            }).then(response => {
+                const cartItems = response.data;
+                let cartHtml = '';
+
+                if (cartItems.length === 0) {
+                    cartHtml = '<p>Your cart is empty.</p>';
+                } else {
+                    cartHtml = '<ul class="list-group">';
+                    cartItems.forEach(item => {
+                        cartHtml += `
+                            <li class="list-group-item">
+                                <h5>${item.product.name}</h5>
+                                <p>Price: $${item.price}</p>
+                                <p>Quantity: ${item.quantity}</p>
+                                <button class="btn btn-danger" onclick="removeFromCart(${userId}, ${item.product.id})">Remove</button>
+                            </li>
+                        `;
+                    });
+                    cartHtml += '</ul>';
+                }
+
+                document.getElementById('cart').innerHTML = cartHtml;
+            }).catch(error => {
+                alert("Error viewing cart: " + error);
+            });
+        }
+
+        // Function to remove a product from the cart
+        function removeFromCart(userId, productId) {
+            axios.delete(`/cart/remove`, {
+                params: { userId: userId, productId: productId }
+            }).then(response => {
+                alert(response.data);
+                viewCart(userId);  // Refresh the cart view
+            }).catch(error => {
+                alert("Error removing product from cart: " + error);
+            });
+        }
+
+        // Function to checkout
+        function checkout(userId) {
+            axios.post(`/cart/checkout`, null, {
+                params: { userId: userId }
+            }).then(response => {
+                alert(response.data);
+                viewCart(userId);  // Clear the cart after checkout
+            }).catch(error => {
+                alert("Error during checkout: " + error);
+            });
+        }
+    </script>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="mb-4">Shopping Cart</h1>
+
+    <!-- Cart Section -->
+    <div id="cart">
+        <p>Your cart is empty. Add some products!</p>
+    </div>
+
+    <!-- Checkout Button -->
+    <button class="btn btn-primary mt-3" onclick="checkout(1)">Checkout</button>
+
+    <hr>
+
+    <!-- Add Products to Cart -->
+    <h2>Products</h2>
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Product 1</h5>
+            <p class="card-text">Price: $10</p>
+            <input type="number" class="form-control mb-2" id="quantity-1" value="1" min="1">
+            <button class="btn btn-success" onclick="addToCart(1, 1, document.getElementById('quantity-1').value)">Add to Cart</button>
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Product 2</h5>
+            <p class="card-text">Price: $20</p>
+            <input type="number" class="form-control mb-2" id="quantity-2" value="1" min="1
